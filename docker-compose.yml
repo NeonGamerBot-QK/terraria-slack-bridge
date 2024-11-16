@@ -1,0 +1,12 @@
+name: testing
+services:
+  terraria:
+    stdin_open: true
+    tty: true
+    ports:
+      - 7777:7777
+    volumes:
+      - ./worlds:/root/.local/share/Terraria/Worlds
+    container_name: terraria
+    image: ryshe/terraria:vanilla-latest
+    command: -world /root/.local/share/Terraria/Worlds/Test.wld -autocreate 1
