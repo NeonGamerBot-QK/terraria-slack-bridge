@@ -122,7 +122,7 @@ const regexes = [
       stream.on("data", (data) => {
         const d = data.toString().trim();
         console.dir(d);
-        if(lastMessage && Date.now() - lastMessage < 300) {
+        if (lastMessage && Date.now() - lastMessage < 300) {
           return;
         }
         lastMessage = Date.now();
