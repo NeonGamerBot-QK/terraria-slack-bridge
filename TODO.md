@@ -1,0 +1,5 @@
+- [ ] add console support
+- [ ] add tshock server support 
+- [ ] add typings??
+- [ ] add better config
+- [ ] Ship on high seas

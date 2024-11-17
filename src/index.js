@@ -108,6 +108,8 @@ const regexes = [
   const containers = await docker1.listContainers();
   const containerD =
     containers.find((c) => c.Names.includes("terraria")) || containers[0];
+    let lastMessage = ""
+    let messageQueue = []
   docker1
     .getContainer(containerD.Id)
     .logs({
@@ -116,10 +118,39 @@ const regexes = [
       follow: true
     })
     .then((stream) => {
+  
+
       //   setTimeout(() => {
       stream.on("data", (data) => {
         const d = data.toString().trim();
         console.dir(d);
+        if(lastMessage && Date.now() - lastMessage < 1000) {
+          return;
+        }
+        lastMessage = Date.now()
+
+        if(d.length < 1000 && d.length > 0) {
+          if(false) { 
+            messageQueue.push(d)
+            
+          } else {
+            web.chat.postMessage({  
+              channel: require("./config").channel_term,
+              text: d,
+              username: "Terraria"
+            });
+          }
+        }
+        if(messageQueue.length > 0) {
+          // messageQueue.push(d)
+          let str = messageQueue.join("\n")
+          messageQueue = []
+          web.chat.postMessage({  
+            channel: require("./config").channel_logs,
+            text: str,
+            username: "Terraria"
+          });
+        }
         for (const regex of regexes) {
           if (regex.regex.test(d)) {
             console.log("Matched", regex.name);
