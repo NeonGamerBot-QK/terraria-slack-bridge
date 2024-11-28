@@ -1,5 +1,10 @@
 - [ ] add console support
 - [ ] add tshock server support
+- - [ ] When using tshock there will be more commands & chats so support that
 - [ ] add typings??
 - [ ] add better config
 - [ ] Ship on high seas
+- [ ] add sending commands from console channel
+- [ ] add command `!online`
+- [ ] add command `!ip`
+- [ ] Make the name of the bot reflect the user who is sending the chat

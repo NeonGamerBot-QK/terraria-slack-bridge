@@ -5,7 +5,7 @@
   "author": "Saahil <neon@saahild.com>",
   "license": "MIT",
   "dependencies": {
-    "@slack/web-api": "^7.7.0",
+    "@slack/bolt": "^4.1.1",
     "dockerode": "^4.0.2",
     "dotenv": "^16.4.5"
   }

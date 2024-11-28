@@ -1,9 +1,17 @@
 require("dotenv").config();
 var Docker = require("dockerode");
-const { WebClient } = require("@slack/web-api");
-const web = new WebClient(process.env.SLACK_TOKEN);
-var docker1 = new Docker();
+const { App } = require('@slack/bolt');
 
+const app = new App({
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  signatureVerification: false,
+  tokenVerificationEnabled: false,
+  token: process.env.SLACK_TOKEN,
+});
+
+const web = app.client 
+var docker1 = new Docker();
+let global_stream = null;
 class LogLineType {
   constructor(
     name,
@@ -102,9 +110,9 @@ const regexes = [
     () => ":zap: *Server has started!*",
   ),
 ];
-
+app.event("message", console.log)
 // stop
-(async () => {
+;(async () => {
   const containers = await docker1.listContainers();
   const containerD =
     containers.find((c) => c.Names.includes("terraria")) || containers[0];
@@ -112,17 +120,24 @@ const regexes = [
   let messageQueue = [];
   docker1
     .getContainer(containerD.Id)
-    .logs({
-      stdout: true,
-      stderr: true,
-      follow: true,
+    .attach({
+      stream: true,  // We want to receive data stream
+      stdout: true,  // Attach to stdout
+      stderr: true,  // Attach to stderr
+      stdin: true,   // Allow input to the container
+      tty: true      // Allocate a pseudo-tty
     })
     .then((stream) => {
+      global_stream = stream;
       //   setTimeout(() => {
+        // setInterval(() => {
+        //   console.log(stream)
+        //   stream.write("say Hi\n");
+        // }, 4000)
       stream.on("data", (data) => {
         const d = data.toString().trim();
         console.dir(d);
-        if (lastMessage && Date.now() - lastMessage < 300) {
+        if (lastMessage && Date.now() - lastMessage < 10) {
           return;
         }
         lastMessage = Date.now();
@@ -173,3 +188,23 @@ const regexes = [
       //   }, 2500);
     });
 })();
+app.message(async ({ message, say }) => {
+  let event = message
+  console.debug(`#message`, Boolean(global_stream))
+  // if no stream then ignore
+  if (!global_stream) {
+    return;
+  }
+  if(event.channel != require("./config").channel_term || event.channel != require("./config").channel_logs || event.subtype == "bot_message" || event.subtype == "message_deleted") {
+    return;
+  }
+  if(event.channel == require("./config").channel_term) {
+    global_stream.write(`${event.text}\n`);
+  }
+  if(event.channel == require("./config").channel_logs) {
+    global_stream.write(`say [${event.user.toString()}] ${event.text}\n`);
+  }
+});
+app.start(process.env.PORT || 3000).then(() => {
+  console.log("⚡️ Bolt app is running!");
+})
