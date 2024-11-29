@@ -8,7 +8,7 @@ const app = new App({
   tokenVerificationEnabled: false,
   token: process.env.SLACK_TOKEN,
 });
-
+const memCacheMapOfUsernames = new Map()
 const web = app.client 
 var docker1 = new Docker();
 let global_stream = null;
@@ -110,13 +110,14 @@ const regexes = [
     () => ":zap: *Server has started!*",
   ),
 ];
-app.event("message", console.log)
+// app.event("message", console.log)
 // stop
 ;(async () => {
   const containers = await docker1.listContainers();
   const containerD =
     containers.find((c) => c.Names.includes("terraria")) || containers[0];
   let lastMessage = "";
+ 
   let messageQueue = [];
   docker1
     .getContainer(containerD.Id)
@@ -127,7 +128,7 @@ app.event("message", console.log)
       stdin: true,   // Allow input to the container
       tty: true      // Allocate a pseudo-tty
     })
-    .then((stream) => {
+    .then(async (stream) => {
       global_stream = stream;
       //   setTimeout(() => {
         // setInterval(() => {
@@ -137,9 +138,9 @@ app.event("message", console.log)
       stream.on("data", (data) => {
         const d = data.toString().trim();
         console.dir(d);
-        if (lastMessage && Date.now() - lastMessage < 10) {
-          return;
-        }
+        // if (lastMessage && Date.now() - lastMessage < 10) {
+        //   return;
+        // }
         lastMessage = Date.now();
 
         if (d.length < 1000 && d.length > 0) {
@@ -186,25 +187,62 @@ app.event("message", console.log)
         }
       });
       //   }, 2500);
+      function execServerCmd(cmd) {
+        return new Promise((res,rej) => {
+          (global_stream || stream).write(cmd + "\n");
+          (global_stream || stream).once("data", (data) => {
+            // console.log(data.toString());
+            res (data.toString())
+          })
+        })
+          }
+          let server_port = await execServerCmd("port").then(d=>d.split("Port: ")[1].split("\r")[0])
+          let max_players = await execServerCmd("maxplayers").then(d=>d.split("Max Players: ")[1].split("\r")[0])
+console.log(server_port.toString(), "#port")
     });
+ 
+    // get static data, such as IP + port
+
+    app.event("message", async (par) => {
+      if(par.event.bot_id) return;
+      if(!par.event.text.startsWith("!")) return;
+      const args = par.event.text.split(" ");
+      const cmd =args.shift().toLowerCase().slice(1);
+      if(cmd == "ping") {
+        await web.chat.postMessage({
+          channel: par.event.channel,
+          text: "Pong",
+        });
+      } else if (cmd == "online") {
+
+      } else if(cmd == "ip") {
+
+      }
+    })
+    app.message(async ({ message, say }) => {
+      let event = message
+      console.debug(`#message`, Boolean(global_stream))
+      console.log(message)
+      // if no stream then ignore
+      if (!global_stream) {
+        return;
+      }
+      // if(event.channel != require("./config").channel_term || event.channel != require("./config").channel_logs || event.subtype == "bot_message" || event.subtype == "message_deleted") {
+      //   return;
+      // }
+      if(event.channel == require("./config").channel_term) {
+        global_stream.write(`${event.text}\n`);
+      }
+      if(event.channel == require("./config").channel_logs) {
+        let username = memCacheMapOfUsernames.get(event.user) || await web.users.info({ user: event.user }).then(d => d.user.name)
+        if(!memCacheMapOfUsernames.has(event.user)) {
+          memCacheMapOfUsernames.set(event.user, username)
+        }
+        global_stream.write(`say [${username}] ${event.text}\n`);
+      }
+      
+    });
+    app.start(process.env.PORT || 3000).then(() => {
+      console.log("⚡️ Bolt app is running!");
+    })
 })();
-app.message(async ({ message, say }) => {
-  let event = message
-  console.debug(`#message`, Boolean(global_stream))
-  // if no stream then ignore
-  if (!global_stream) {
-    return;
-  }
-  if(event.channel != require("./config").channel_term || event.channel != require("./config").channel_logs || event.subtype == "bot_message" || event.subtype == "message_deleted") {
-    return;
-  }
-  if(event.channel == require("./config").channel_term) {
-    global_stream.write(`${event.text}\n`);
-  }
-  if(event.channel == require("./config").channel_logs) {
-    global_stream.write(`say [${event.user.toString()}] ${event.text}\n`);
-  }
-});
-app.start(process.env.PORT || 3000).then(() => {
-  console.log("⚡️ Bolt app is running!");
-})
