@@ -112,6 +112,8 @@ const regexes = [
 ];
 // app.event("message", console.log)
 // stop
+let max_players = null;
+let server_port = null;
 (async () => {
   const containers = await docker1.listContainers();
   const containerD =
@@ -196,13 +198,14 @@ const regexes = [
           });
         });
       }
-      let server_port = await execServerCmd("port").then(
+      globalThis.execServerCmd = execServerCmd;
+       server_port = await execServerCmd("port").then(
         (d) => d.split("Port: ")[1].split("\r")[0],
       );
-      let max_players = await execServerCmd("maxplayers").then(
-        (d) => d.split("Max Players: ")[1].split("\r")[0],
+       max_players = await execServerCmd("maxplayers").then(
+        (d) => d.split("Player limit: ")[1].split("\r")[0],
       );
-      console.log(server_port.toString(), "#port");
+      console.log(server_port.toString(), "#port", max_players);
     });
 
   // get static data, such as IP + port
@@ -218,7 +221,15 @@ const regexes = [
         text: "Pong",
       });
     } else if (cmd == "online") {
+    await web.chat.postMessage({
+      channel: par.event.channel,
+      text: `Max players: ${max_players}\nCurrently online: ${await execServerCmd("playing").then((d) => d.split("\n").map(e=>e.split("(")[0]).slice(1,d.split("\n").length - 2).join(", "))}`,
+    })
     } else if (cmd == "ip") {
+      await web.chat.postMessage({
+        channel: par.event.channel,
+        text: `Server IP: ${process.env.SERVER_IP || "localhost"}:${server_port}`,
+      })
     }
   });
   app.message(async ({ message, say }) => {

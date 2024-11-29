@@ -16,6 +16,9 @@
             pkgs.nodejs_20
             pkgs.uv
           ];
+          shellHook = ''
+            zsh
+          '';
         };
       }
     );
