@@ -198,7 +198,7 @@ let server_port = null;
         });
       }
       globalThis.execServerCmd = execServerCmd;
-       server_port = await execServerCmd("port").then(
+      server_port = await execServerCmd("port").then(
         (d) => d.split("Port: ")[1].split("\r")[0],
       ) || "sorry i failed";
        max_players = await execServerCmd("maxplayers").then(
@@ -228,7 +228,7 @@ let server_port = null;
       await web.chat.postMessage({
         channel: par.event.channel,
         text: `Server IP: ${process.env.SERVER_IP || "localhost"}:${server_port}`,
-      })
+      });
     }
   });
   app.message(async ({ message, say }) => {
