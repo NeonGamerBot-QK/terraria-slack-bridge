@@ -28,17 +28,17 @@ class LogLineType {
   }
 }
 const regexes = [
-  new LogLineType(
-    "connection_attempt",
-    /^([\d\.]{7,15}):\d{1,5} is connecting\.\.\./,
-    true,
-    (ip) => `Connection attempt from ${"*".repeat(ip.length)}`,
-  ),
+  // new LogLineType(
+  //   "connection_attempt",
+  //   /^([\d\.]{7,15}):\d{1,5} is connecting\.\.\./,
+  //   true,
+  //   (ip) => `Connection attempt from ${"*".repeat(ip.length)}`,
+  // ),
   new LogLineType(
     "connection_booted",
     /^([\d\.]{7,15}):\d{1,5} was booted: Invalid operation at this state\./,
     true,
-    (ip) => `Connection from ${ip} was booted`,
+    (ip) => `Connection from ${"*".repeat(ip.length)} was booted`,
   ),
   new LogLineType(
     "player_joined",
@@ -110,7 +110,6 @@ const regexes = [
     () => ":zap: *Server has started!*",
   ),
 ];
-// app.event("message", console.log)
 // stop
 let max_players = null;
 let server_port = null;
@@ -201,10 +200,10 @@ let server_port = null;
       globalThis.execServerCmd = execServerCmd;
        server_port = await execServerCmd("port").then(
         (d) => d.split("Port: ")[1].split("\r")[0],
-      );
+      ) || "sorry i failed";
        max_players = await execServerCmd("maxplayers").then(
-        (d) => d.split("Player limit: ")[1].split("\r")[0],
-      );
+        (d) => d.split("Player limit: ")[1]?.split("\r")[0],
+      ) || "sorry i failed";
       console.log(server_port.toString(), "#port", max_players);
     });
 
@@ -223,7 +222,7 @@ let server_port = null;
     } else if (cmd == "online") {
     await web.chat.postMessage({
       channel: par.event.channel,
-      text: `Max players: ${max_players}\nCurrently online: ${await execServerCmd("playing").then((d) => d.split("\n").map(e=>e.split("(")[0]).slice(1,d.split("\n").length - 2).join(", "))}`,
+      text: `Max players: ${max_players}\nCurrently online: ${await execServerCmd("playing").then((d) => d.split("\n").map(e=>e.split("(")[0]).slice(1,d.split("\n").length - 2).join(", ").trim())}`,
     })
     } else if (cmd == "ip") {
       await web.chat.postMessage({
@@ -235,14 +234,12 @@ let server_port = null;
   app.message(async ({ message, say }) => {
     let event = message;
     console.debug(`#message`, Boolean(global_stream));
-    console.log(message);
+    // console.log(message);
+    if(event.text.startsWith("!")) return;
     // if no stream then ignore
     if (!global_stream) {
       return;
     }
-    // if(event.channel != require("./config").channel_term || event.channel != require("./config").channel_logs || event.subtype == "bot_message" || event.subtype == "message_deleted") {
-    //   return;
-    // }
     if (event.channel == require("./config").channel_term) {
       global_stream.write(`${event.text}\n`);
     }
