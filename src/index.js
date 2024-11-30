@@ -198,12 +198,14 @@ let server_port = null;
         });
       }
       globalThis.execServerCmd = execServerCmd;
-      server_port = await execServerCmd("port").then(
-        (d) => d.split("Port: ")[1].split("\r")[0],
-      ) || "sorry i failed";
-       max_players = await execServerCmd("maxplayers").then(
-        (d) => d.split("Player limit: ")[1]?.split("\r")[0],
-      ) || "sorry i failed";
+      server_port =
+        (await execServerCmd("port").then(
+          (d) => d.split("Port: ")[1].split("\r")[0],
+        )) || "sorry i failed";
+      max_players =
+        (await execServerCmd("maxplayers").then(
+          (d) => d.split("Player limit: ")[1]?.split("\r")[0],
+        )) || "sorry i failed";
       console.log(server_port.toString(), "#port", max_players);
     });
 
@@ -220,10 +222,19 @@ let server_port = null;
         text: "Pong",
       });
     } else if (cmd == "online") {
-    await web.chat.postMessage({
-      channel: par.event.channel,
-      text: `Max players: ${max_players}\nCurrently online: ${await execServerCmd("playing").then((d) => d.split("\n").map(e=>e.split("(")[0]).slice(1,d.split("\n").length - 2).join(", ").trim())}`,
-    })
+      await web.chat.postMessage({
+        channel: par.event.channel,
+        text: `Max players: ${max_players}\nCurrently online: ${await execServerCmd(
+          "playing",
+        ).then((d) =>
+          d
+            .split("\n")
+            .map((e) => e.split("(")[0])
+            .slice(1, d.split("\n").length - 2)
+            .join(", ")
+            .trim(),
+        )}`,
+      });
     } else if (cmd == "ip") {
       await web.chat.postMessage({
         channel: par.event.channel,
@@ -235,7 +246,7 @@ let server_port = null;
     let event = message;
     console.debug(`#message`, Boolean(global_stream));
     // console.log(message);
-    if(event.text.startsWith("!")) return;
+    if (event.text.startsWith("!")) return;
     // if no stream then ignore
     if (!global_stream) {
       return;
