@@ -18,7 +18,7 @@ class LogLineType {
     regex,
     is_enabled = true,
     callback = null,
-    capture_groups = 0
+    capture_groups = 0,
   ) {
     this.name = name;
     this.regex = regex;
@@ -38,76 +38,76 @@ const regexes = [
     "connection_booted",
     /^([\d\.]{7,15}):\d{1,5} was booted: Invalid operation at this state\./,
     true,
-    (ip) => `Connection from ${"*".repeat(ip.length)} was booted`
+    (ip) => `Connection from ${"*".repeat(ip.length)} was booted`,
   ),
   new LogLineType(
     "player_joined",
     /^(.*) has joined.$/,
     true,
-    (player) => `:inbox_tray: *${player}* has joined`
+    (player) => `:inbox_tray: *${player}* has joined`,
   ),
   new LogLineType(
     "player_left",
     /^(.*) has left.$/,
     true,
-    (player) => `:outbox_tray: *${player}* has left`
+    (player) => `:outbox_tray: *${player}* has left`,
   ),
   new LogLineType(
     "chat_message",
     /^<(.*)> (.*)$/,
     true,
-    (player, message) => `*${player}*: ${message}`
+    (player, message) => `*${player}*: ${message}`,
   ),
   new LogLineType(
     "world_save_progress",
     /^Saving world data: (\d+)%/,
     true,
-    null
+    null,
   ),
   new LogLineType(
     "world_validation_progress",
     /^Validating world save: (\d+)%/,
     null,
-    null
+    null,
   ),
   new LogLineType(
     "world_backup",
     /^Backing up world file/,
     true,
-    () => "_Backup successfully created_"
+    () => "_Backup successfully created_",
   ),
   new LogLineType(
     "terraria_error",
     /^Error on message Terraria\.MessageBuffer/,
     true,
-    () => "_Terraria.MessageBuffer error from the server_"
+    () => "_Terraria.MessageBuffer error from the server_",
   ),
   new LogLineType(
     "world_load_objects_progress",
     /^Resetting game objects (\d+)%/,
     null,
     null,
-    1
+    1,
   ),
   new LogLineType(
     "world_load_data_progress",
     /^Loading world data: (\d+)%/,
     null,
     null,
-    1
+    1,
   ),
   new LogLineType(
     "world_load_liquids_progress",
     /^Settling liquids (\d+)%/,
     null,
     null,
-    1
+    1,
   ),
   new LogLineType(
     "server_listening",
     /^Listening on port \d+/,
     true,
-    () => ":zap: *Server has started!*"
+    () => ":zap: *Server has started!*",
   ),
 ];
 // stop
@@ -200,11 +200,11 @@ let server_port = null;
       globalThis.execServerCmd = execServerCmd;
       server_port =
         (await execServerCmd("port").then(
-          (d) => d.split("Port: ")[1].split("\r")[0]
+          (d) => d.split("Port: ")[1].split("\r")[0],
         )) || "sorry i failed";
       max_players =
         (await execServerCmd("maxplayers").then(
-          (d) => d.split("Player limit: ")[1]?.split("\r")[0]
+          (d) => d.split("Player limit: ")[1]?.split("\r")[0],
         )) || "sorry i failed";
       console.log(server_port.toString(), "#port", max_players);
     });
@@ -225,14 +225,14 @@ let server_port = null;
       await web.chat.postMessage({
         channel: par.event.channel,
         text: `Max players: ${max_players}\nCurrently online: ${await execServerCmd(
-          "playing"
+          "playing",
         ).then((d) =>
           d
             .split("\n")
             .map((e) => e.split("(")[0])
             .slice(1, d.split("\n").length - 2)
             .join(", ")
-            .trim()
+            .trim(),
         )}`,
       });
     } else if (cmd == "ip") {
